@@ -31,9 +31,10 @@
 #    installed on the system                                              *
 #                                                                         *
 # Usage:                                                                  *
-# resign_ipa.sh <some_ipa.ipa> <some_profile.mobileprovision>             *
+# resign_ipa.sh <ipa_file> <mobileprovision> [<output dir>]               *
 #     A re-signed ipa with the name <some_ipa.resigned.ipa> will be       *
-#     created in the current working directory.                           *
+#     created in the current working directory, or 'output dir' if the    *
+#     optional third parameter is provided.                               *
 #                                                                         *
 #   Note: Code signing identity, bundle identifiers etc. will be          *
 #         extracted from the provisioning profile.                        *
@@ -66,6 +67,11 @@ function failed()
     local error=${1:-Undefined error}
     echo "Failed: $error" >&2
     exit 1
+}
+
+function info_log()
+{
+  echo " [INFO] - ${1}" 
 }
 
 function absolute_path()
@@ -225,24 +231,24 @@ unzip -oq "${IPA_FILE}"
 APP_NAME=$(name=$(ls -1 Payload);echo ${name%.app})
 
 #Remove old CodeSignature
-echo "Removing old signature"
+info_log "Removing old signature"
 rm -r "Payload/${APP_NAME}.app/_CodeSignature" "Payload/${APP_NAME}.app/CodeResources" 2> /dev/null | true
 
 #Replace embedded mobile provisioning profile
-echo "Embedding mobileprovision in app"
+info_log  "Embedding mobileprovision in app"
 cp "${MOBILE_PROVISION}" "Payload/${APP_NAME}.app/embedded.mobileprovision" || failed "Failed copying mobileprovision to app dir"
 
 
 ## Set the bundleidentifier in Info.plist to match 
-echo "CFBundleIdentifier: '${BUNDLE_IDENTIFIER}' ($(basename ${MOBILE_PROVISION}))" 
+info_log  "CFBundleIdentifier: '${BUNDLE_IDENTIFIER}' ($(basename ${MOBILE_PROVISION}))" 
 /usr/libexec/PlistBuddy -c 'Set :CFBundleIdentifier "${BUNDLE_IDENTIFIER}"' "Payload/${APP_NAME}.app/Info.plist" || failed "Setting CFBundleIdentifier failed"
 
 #Re-sign
-echo "Code signing identity: '${CODE_SIGNING_IDENTITY}' ($(basename ${MOBILE_PROVISION}))"
+info_log  "Code signing identity: '${CODE_SIGNING_IDENTITY}' ($(basename ${MOBILE_PROVISION}))"
 /usr/bin/codesign -f -s "${CODE_SIGNING_IDENTITY}" --resource-rules "Payload/${APP_NAME}.app/ResourceRules.plist" "Payload/${APP_NAME}.app" || failed "Code signing failed"
 
 #Re-package
-echo "Packaging IPA file"
+info_log  "Packaging IPA file"
 zip -qr "${OUTDIR}/${OUTPUT_IPA_FILE}" Payload || failed "Unable to package ipa"
 
 echo ""
