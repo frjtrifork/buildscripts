@@ -25,8 +25,15 @@
 # This script can be used to re-sign an Apple ipa file for OTA            *
 # distribution.                                                           *
 #                                                                         *
+# Requirements:                                                           *
+#  - XCode command line tools must be installed on the system             *
+#  - The distribution certificate in the mobileprovision file must be     *
+#    installed on the system                                              *
+#                                                                         *
 # Usage:                                                                  *
 # resign_ipa.sh <some_ipa.ipa> <some_profile.mobileprovision>             *
+#     A re-signed ipa with the name <some_ipa.resigned.ipa> will be       *
+#     created in the current working directory.                           *
 #                                                                         *
 #   Note: Code signing identity, bundle identifiers etc. will be          *
 #         extracted from the provisioning profile.                        *
