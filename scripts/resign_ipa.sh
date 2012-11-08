@@ -28,8 +28,8 @@
 # Usage:                                                                  *
 # resign_ipa.sh <some_ipa.ipa> <some_profile.mobileprovision>             *
 #                                                                         *
-# 	Note: Code signing identity, bundle identifiers etc. will be extracted*
-#         from the provisioning profile.                                  *
+#   Note: Code signing identity, bundle identifiers etc. will be          *
+#         extracted from the provisioning profile.                        *
 #**************************************************************************
 
 
