@@ -31,7 +31,8 @@ Other than XCode Command Line Tools, the scripts should work out of the box on O
 systems. Other tools the scripts typically use include PlistBuddy and Python - but 
 both are included in a normal OSx installation.
 
-
+Description
+===========
 The scripts can be used to install new provisioning profiles, re-sign 
 IPA files for OTA distribution, build an XCode iOS project from scratch
 for distribution using defined code signing identity and bundle identifier and
