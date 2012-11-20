@@ -36,11 +36,12 @@ set -e
 #**************************************************************************
 
 
-if [ $# -lt 2 ]; then
+if [ ! $# -eq 3 ]; then
   echo "Usage: ENV_VARS $0 <mobileprovision> <certificate>"
   echo "   Parameters:"
   echo "      1: Mobile provisioning file."
-  echo "      2: Certificate"
+  echo "      2: certificate.cer"
+  echo "      3: pkcs12.p12"
   echo ""
   echo "   Environment variables [all optional]:"
   echo "      [CERTIFICATE_PASSWORD - Certificate password. Default is blank]"
@@ -190,8 +191,14 @@ else
   CERTIFICATE_FILE=$(absolute_path "${2}")
 fi
 
-if [ $# -gt 2 ]; then
-	failed "Only two arguments are supported"
+if [ ! -f "${3}" ]; then
+  failed "File '$3' not found"
+else
+  PKCS12_FILE=$(absolute_path "${3}")
+fi
+
+if [ ! $# -eq 3 ]; then
+	failed "This script requires three arguments"
 fi
 
 
@@ -199,6 +206,7 @@ echo ""
 echo "Installing provisioning profile and certificate: "
 echo "  MobileProvision: '${PROVISIONING_FILE}'"
 echo "  Certificate: '${CERTIFICATE_FILE}'"
+echo "  PKCS12: '${PKCS12_FILE}'"
 echo ""
 
 
@@ -239,8 +247,24 @@ if [ -n "$pem" ]; then
 #	echo "$pem" | openssl x509 -noout -enddate -subject
 fi
 
-info_log "Importing certificate"
-security import "${CERTIFICATE_FILE}" -k "${KEYCHAIN}" -P "${CERTIFICATE_PASSWORD}" -T /usr/bin/codesign
+info_log "Adding certificate to keychain"
+security add-certificates -k "${KEYCHAIN}" "${CERTIFICATE_FILE}"
 
+#info_log "Importing certificate - $(basename ${CERTIFICATE_FILE}) into $(basename ${KEYCHAIN})"
+#security import "${CERTIFICATE_FILE}" -k "${KEYCHAIN}" -P "${CERTIFICATE_PASSWORD}" -T /usr/bin/codesign
+
+#info_log "Trust certificate for codeSigning"
+#security add-trusted-cert -p codeSign -k "${KEYCHAIN}" "${CERTIFICATE_FILE}"
+
+info_log "Import private key - $(basename ${PKCS12_FILE}) into $(basename ${KEYCHAIN})"
+security import "${PKCS12_FILE}" -k "${KEYCHAIN}" -P "${CERTIFICATE_PASSWORD}" -T /usr/bin/codesign
+
+
+# List identities for code signing
+echo "Find identities for codesigning"
+security find-identity -p codesigning -v "${KEYCHAIN}"
+
+echo "Find code signing certificate"
+security find-certificate -a -c "$code_signing_identity" -Z "${KEYCHAIN}"
 
 echo "Done"
